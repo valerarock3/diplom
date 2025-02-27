@@ -1,0 +1,54 @@
+
+.header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px 2em;
+}
+.block-with-goods {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Три колонки */
+    gap: 20px; /* Расстояние между элементами */
+    padding: 20px;
+}
+
+.block-with-goods div {
+    border: 1px solid #ccc;
+    padding: 20px;
+    text-align: center;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+/* Эффект при наведении на элемент */
+.block-with-goods div:hover {
+    transform: scale(1.05);
+}
+
+/* Стиль для изображений */
+.block-with-goods img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+/* Стиль для текста */
+.block-with-goods p {
+    margin-top: 10px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+
+
+/* Адаптивные стили */
+@media (max-width: 1200px) {
+    .block-with-goods {
+        grid-template-columns: repeat(2, 1fr); /* Две колонки на средних экранах */
+    }
+}
+
+@media (max-width: 768px) {
+    .block-with-goods {
+        grid-template-columns: 1fr; /* Одна колонка на маленьких экранах */
+    }
+}
