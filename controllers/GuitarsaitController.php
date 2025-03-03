@@ -28,17 +28,23 @@ class GuitarsaitController extends Controller{
         return $this->render('reviews');
     }
     // вызов страницы с товарами
-    public function actionView($id)
-    {
-        $model = ProductForm::findOne($id);
-        if ($model === null) {
-            throw new NotFoundHttpException('The requested page does not exist.');
-        }
+    // public function actionView($id)
+    // {
+    //     $model = ProductForm::findOne($id);
+    //     if ($model === null) {
+    //         throw new NotFoundHttpException('The requested page does not exist.');
+    //     }
 
-        return $this->render('product', [
-            'model' => $model,
-        ]);
+    //     return $this->render('product', [
+    //         'model' => $model,
+    //     ]);
+    // }
+
+    public function actionProduct(){
+
+    return $this->render('product');
+
+    
     }
-
 
 }
