@@ -39,54 +39,155 @@ $this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii
     <link rel="stylesheet" href="home.css">
 </head>
 <body>
-   <div class="sait">
-    <!-- лого -->
-    <div class="header">
-        <!-- поле ввода поиска товаров -->
-        <form action="/search" method="get">
-            <input type="text" name="query" placeholder="Введите название товара">
-            <button type="submit">Искать</button>
-        </form>
+    <?php $this->beginBody() ?>
+    <div class="site-content">
+        <!-- Поисковая строка и корзина -->
+        <div class="top-bar">
+            <div class="search-bar">
+                <?= Html::textInput('search', '', ['class' => 'search-input', 'placeholder' => 'Введите название товара']) ?>
+                <?= Html::button('Искать', ['class' => 'search-button']) ?>
+            </div>
+            <div class="nav-links">
+                <?= Html::a('Отзывы', ['reviews'], ['class' => 'nav-link']) ?>
+                <?= Html::a('Корзина', ['korzina'], ['class' => 'nav-link']) ?>
+            </div>
+        </div>
 
-        <a href="reviews">Отзывы</a>
-        <a href="korzina">Корзина</a>
+        <!-- Сетка категорий -->
+        <div class="categories-grid">
+            <?php foreach ($categories as $key => $category): ?>
+                <div class="category-item">
+                    <?= Html::a(
+                        Html::img('@web/images/' . $category['image'], [
+                            'alt' => $category['title'],
+                            'class' => 'category-image'
+                        ]) . 
+                        Html::encode($category['title']),
+                        $category['url'],
+                        ['class' => 'category-link']
+                    ) ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Контакты -->
+        <div class="contacts">
+            <h2>Контакты</h2>
+            <p>Телефон: +7 (999) 999-99-99</p>
+            <p>Email: info@example.com</p>
+            <p>Адрес: ул. Пушкина, д. 10</p>
+        </div>
     </div>
-    <!-- реклама -->
-    <div class="advertising"></div>
-<!-- контейнер с икнонками разделов товаров -->
-<div class="block-with-goods">
-    <!-- контент с гитарами --> 
-    <div class="guitar-content">
-        <img src="гитара.jpg" alt="гитары">
-        <a href="product">гитары</a>
-    </div>
-    <!-- контент струны для гитары -->
-    <div class="guitar-strings-content">
-        <img src="струны.jpg" alt="струны для гитары">
-        <a href="product">струны для гитары</a>
-    </div>
-    <!-- контент гитарные усилители -->
-    <div class="guitar-amplifiers-content">
-        <img src="гитарный усилитель.jpg" alt="гитарные усилители">
-        <a href="product">гитарные усилители</a>
-    </div>
-    <!-- контент с педалями усиления звука -->
-    <div class="pedals-and-effects-processors-content">
-        <img src="педаль.jpg" alt="педали усиления звука">
-        <a href="product">педали усиления звука</a>
-    </div>
-    <!-- Чехлы и кейсы для гитар -->
-    <div class="cases-and-covers-for-guitars-content">
-        <img src="чехлы.jpg" alt="Чехлы и кейсы для гитар">
-        <a href="product">Чехлы и кейсы для гитар</a>
-    </div>
-    <!-- Аксессуары для гитар -->
-    <div class="guitar-accessories-content">
-        <img src="аксессуары.jpg" alt="Аксессуары для гитар">
-        <a href="product">Аксессуары для гитар</a>
-    </div>
-    <!-- контактное поле -->
-    <div class="contacts-content"></div>
-   </div>
+    <?php $this->endBody() ?>
 </body>
 </html>
+
+<?php
+$this->registerCss("
+    .site-content {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .search-bar {
+        display: flex;
+        gap: 10px;
+    }
+
+    .search-input {
+        padding: 8px;
+        width: 300px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .search-button {
+        padding: 8px 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .search-button:hover {
+        background-color: #0056b3;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 20px;
+    }
+
+    .nav-link {
+        text-decoration: none;
+        color: #333;
+        padding: 8px 16px;
+        border-radius: 4px;
+    }
+
+    .nav-link:hover {
+        background-color: #f8f9fa;
+    }
+
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .category-item {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+        background-color: white;
+    }
+    
+    .category-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .category-link {
+        display: block;
+        text-decoration: none;
+        color: #333;
+        text-align: center;
+    }
+    
+    .category-image {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .contacts {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 30px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .contacts h2 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .contacts p {
+        margin: 5px 0;
+        color: #666;
+    }
+");
+?>
