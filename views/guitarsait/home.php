@@ -1,193 +1,127 @@
 <?php
+use yii\helpers\Html;
+use yii\helpers\Url;
 
-/** @var yii\web\View $this */
-/** @var string $content */
+/* @var $this yii\web\View */
+/* @var $categories array */
 
-use app\assets\GuitarAsset;
-use app\widgets\Alert;
-use yii\bootstrap5\Breadcrumbs;
-use yii\bootstrap5\Html;
-use yii\bootstrap5\Nav;
-use yii\bootstrap5\NavBar;
+$this->title = 'Музыкальный магазин';
 
-GuitarAsset::register($this);
-
-$this->registerCsrfMetaTags();
-$this->registerMetaTag(['charset' => Yii::$app->charset], 'charset');
-$this->registerMetaTag(['name' => 'viewport', 'content' => 'width=device-width, initial-scale=1, shrink-to-fit=no']);
-$this->registerMetaTag(['name' => 'description', 'content' => $this->params['meta_description'] ?? '']);
-$this->registerMetaTag(['name' => 'keywords', 'content' => $this->params['meta_keywords'] ?? '']);
-$this->registerLinkTag(['rel' => 'icon', 'type' => 'image/x-icon', 'href' => Yii::getAlias('@web/favicon.ico')]);
+// Регистрируем CSS файлы
+$this->registerCssFile('@web/css/site.css');
+$this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
 ?>
-<?php $this->beginPage() ?>
 
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Домашняя страница</title>
-    <link rel="stylesheet" href="poisk.css">
-    <link rel="stylesheet" href="sait.css">
-    <link rel="stylesheet" href="home.css">
-</head>
-<body>
-    <?php $this->beginBody() ?>
-    <div class="site-content">
-        <!-- Поисковая строка и корзина -->
-        <div class="top-bar">
-            <div class="search-bar">
-                <?= Html::textInput('search', '', ['class' => 'search-input', 'placeholder' => 'Введите название товара']) ?>
-                <?= Html::button('Искать', ['class' => 'search-button']) ?>
-            </div>
-            <div class="nav-links">
-                <?= Html::a('Отзывы', ['reviews'], ['class' => 'nav-link']) ?>
-                <?= Html::a('Корзина', ['korzina'], ['class' => 'nav-link']) ?>
-            </div>
+<div class="container mt-5">
+    <!-- Поиск и корзина -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <form method="get" class="d-flex gap-2 search-form">
+                <input type="hidden" name="r" value="guitarsait/search">
+                <?= Html::textInput('query', '', [
+                    'class' => 'form-control',
+                    'placeholder' => 'Поиск товаров...'
+                ]) ?>
+                <?= Html::submitButton('Поиск', ['class' => 'btn btn-primary']) ?>
+            </form>
         </div>
-
-        <!-- Сетка категорий -->
-        <div class="categories-grid">
-            <?php foreach ($categories as $key => $category): ?>
-                <div class="category-item">
-                    <?= Html::a(
-                        Html::img('@web/images/' . $category['image'], [
-                            'alt' => $category['title'],
-                            'class' => 'category-image'
-                        ]) . 
-                        Html::encode($category['title']),
-                        $category['url'],
-                        ['class' => 'category-link']
-                    ) ?>
-                </div>
-            <?php endforeach; ?>
-        </div>
-
-        <!-- Контакты -->
-        <div class="contacts">
-            <h2>Контакты</h2>
-            <p>Телефон: +7 (999) 999-99-99</p>
-            <p>Email: info@example.com</p>
-            <p>Адрес: ул. Пушкина, д. 10</p>
+        <div class="col-md-4 text-end">
+            <?= Html::a('<i class="fas fa-plus"></i> Добавить товар', ['guitarsait/create'], [
+                'class' => 'btn btn-success me-2'
+            ]) ?>
+            <?= Html::a('<i class="fas fa-shopping-cart"></i> Корзина', ['guitarsait/korzina'], [
+                'class' => 'btn btn-primary'
+            ]) ?>
+            <?= Html::a('Отзывы', ['guitarsait/reviews'], [
+                'class' => 'btn btn-outline-secondary ms-2'
+            ]) ?>
         </div>
     </div>
-    <?php $this->endBody() ?>
-</body>
-</html>
 
-<?php
-$this->registerCss("
-    .site-content {
-        padding: 20px;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
+    <!-- Баннер -->
+    <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Добро пожаловать в музыкальный магазин</h1>
+            <p class="col-md-8 fs-4">Найдите идеальные инструменты для вашего творчества</p>
+        </div>
+    </div>
 
-    .top-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
+    <h2 class="mb-4">Категории товаров</h2>
 
-    .search-bar {
-        display: flex;
-        gap: 10px;
-    }
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-5">
+        <?php foreach ($categories as $category): ?>
+            <div class="col">
+                <div class="card h-100">
+                    <?= Html::img('@web/' . $category['image'], [
+                        'class' => 'card-img-top',
+                        'alt' => $category['title']
+                    ]) ?>
+                    <div class="card-body">
+                        <h3 class="card-title h5"><?= Html::encode($category['title']) ?></h3>
+                        <?= Html::a('Перейти в категорию', ['guitarsait/category', 'category' => $category['params']['category']], [
+                            'class' => 'btn btn-primary'
+                        ]) ?>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
 
-    .search-input {
-        padding: 8px;
-        width: 300px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-    }
+    <!-- Преимущества -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-truck fa-3x mb-3 text-primary"></i>
+                    <h3 class="h5">Быстрая доставка</h3>
+                    <p class="card-text">По всей России</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-medal fa-3x mb-3 text-primary"></i>
+                    <h3 class="h5">Гарантия качества</h3>
+                    <p class="card-text">Только оригинальные товары</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-headset fa-3x mb-3 text-primary"></i>
+                    <h3 class="h5">Поддержка 24/7</h3>
+                    <p class="card-text">Всегда на связи</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    .search-button {
-        padding: 8px 16px;
-        background-color: #007bff;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-    }
-
-    .search-button:hover {
-        background-color: #0056b3;
-    }
-
-    .nav-links {
-        display: flex;
-        gap: 20px;
-    }
-
-    .nav-link {
-        text-decoration: none;
-        color: #333;
-        padding: 8px 16px;
-        border-radius: 4px;
-    }
-
-    .nav-link:hover {
-        background-color: #f8f9fa;
-    }
-
-    .categories-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-    
-    .category-item {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        overflow: hidden;
-        transition: transform 0.3s ease;
-        background-color: white;
-    }
-    
-    .category-item:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    
-    .category-link {
-        display: block;
-        text-decoration: none;
-        color: #333;
-        text-align: center;
-    }
-    
-    .category-image {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
-
-    .contacts {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        margin-top: 30px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-
-    .contacts h2 {
-        margin-top: 0;
-        margin-bottom: 15px;
-        color: #333;
-    }
-
-    .contacts p {
-        margin: 5px 0;
-        color: #666;
-    }
-");
-?>
+    <!-- Контакты -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title h5">Свяжитесь с нами</h3>
+                    <p class="card-text">
+                        <i class="fas fa-phone"></i> +7 (999) 999-99-99<br>
+                        <i class="fas fa-envelope"></i> info@example.com<br>
+                        <i class="fas fa-map-marker-alt"></i> ул. Пушкина, д. 10
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title h5">Время работы</h3>
+                    <p class="card-text">
+                        Пн-Пт: 10:00 - 20:00<br>
+                        Сб-Вс: 11:00 - 18:00
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

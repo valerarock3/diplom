@@ -2,8 +2,10 @@
 
 namespace app\models;
 
+use Yii;
 use yii\db\ActiveRecord;
 use yii\web\UploadedFile;
+use yii\helpers\FileHelper;
 
 class Product extends ActiveRecord
 {
@@ -20,11 +22,10 @@ class Product extends ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'price'], 'required', 'message' => 'Это поле обязательно для заполнения'],
-            ['name', 'string', 'max' => 255],
-            ['price', 'number', 'min' => 0],
-            ['image', 'string', 'max' => 255],
-            [['imageFile'], 'file', 'skipOnEmpty' => true, 'extensions' => 'png, jpg, jpeg'],
+            [['name', 'price', 'category'], 'required', 'message' => 'Поле {attribute} обязательно для заполнения'],
+            [['price'], 'number', 'message' => 'Цена должна быть числом'],
+            [['name', 'category', 'image'], 'string', 'max' => 255],
+            ['description', 'safe'],
         ];
     }
 
@@ -32,23 +33,68 @@ class Product extends ActiveRecord
     {
         return [
             'id' => 'ID',
-            'name' => 'Название товара',
+            'name' => 'Название',
             'price' => 'Цена',
+            'category' => 'Категория',
             'image' => 'Изображение',
+            'description' => 'Описание',
             'imageFile' => 'Загрузить изображение',
         ];
+    }
+
+    public function beforeValidate()
+    {
+        if (parent::beforeValidate()) {
+            // Если файл не загружен, пропускаем валидацию
+            if ($this->imageFile === null) {
+                return true;
+            }
+            return true;
+        }
+        return false;
     }
 
     public function upload()
     {
         if ($this->validate()) {
             if ($this->imageFile) {
+                // Создаем директорию, если она не существует
+                $uploadPath = \Yii::getAlias('@webroot/uploads');
+                if (!file_exists($uploadPath)) {
+                    FileHelper::createDirectory($uploadPath, 0777, true);
+                }
+
                 $fileName = 'product_' . time() . '.' . $this->imageFile->extension;
-                $this->imageFile->saveAs('uploads/' . $fileName);
-                $this->image = $fileName;
-                return true;
+                if ($this->imageFile->saveAs($uploadPath . '/' . $fileName)) {
+                    $this->image = $fileName;
+                    return true;
+                }
             }
+            return true; // Возвращаем true если нет файла для загрузки
         }
         return false;
+    }
+
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+
+        // Отладочная информация
+        Yii::debug('Сохранение товара: ' . print_r($this->attributes, true));
+        
+        if ($this->isNewRecord) {
+            $this->created_at = date('Y-m-d H:i:s');
+        }
+        $this->updated_at = date('Y-m-d H:i:s');
+
+        return true;
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        Yii::debug('Товар сохранен. ID: ' . $this->id);
     }
 } 

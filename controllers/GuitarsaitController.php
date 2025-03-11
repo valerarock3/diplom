@@ -9,6 +9,7 @@ use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
 use app\models\Product;
 use app\models\Cart;
+use yii\helpers\FileHelper;
 
 class GuitarsaitController extends Controller{
 
@@ -16,38 +17,37 @@ class GuitarsaitController extends Controller{
     //  домашняя страница
     public function actionHome()
     {
-        // Определяем категории и их параметры
         $categories = [
-            'guitars' => [
+            [
                 'title' => 'Гитары',
-                'image' => 'guitars.jpg',
-                'url' => ['guitarsait/category', 'category' => 'guitars']
+                'image' => 'images/categories/guitars.jpg',
+                'params' => ['category' => 'guitars']
             ],
-            'strings' => [
-                'title' => 'Струны для гитары',
-                'image' => 'strings.jpg',
-                'url' => ['guitarsait/category', 'category' => 'strings']
+            [
+                'title' => 'Струны',
+                'image' => 'images/categories/strings.jpg',
+                'params' => ['category' => 'strings']
             ],
-            'amplifiers' => [
-                'title' => 'Гитарные усилители',
-                'image' => 'amplifiers.jpg',
-                'url' => ['guitarsait/category', 'category' => 'amplifiers']
+            [
+                'title' => 'Аксессуары',
+                'image' => 'images/categories/accessories.jpg',
+                'params' => ['category' => 'accessories']
             ],
-            'pedals' => [
-                'title' => 'Педали усиления звука',
-                'image' => 'pedals.jpg',
-                'url' => ['guitarsait/category', 'category' => 'pedals']
+            [
+                'title' => 'Чехлы и кейсы',
+                'image' => 'images/categories/cases.jpg',
+                'params' => ['category' => 'cases']
             ],
-            'cases' => [
-                'title' => 'Чехлы и кейсы для гитар',
-                'image' => 'cases.jpg',
-                'url' => ['guitarsait/category', 'category' => 'cases']
+            [
+                'title' => 'Педали эффектов',
+                'image' => 'images/categories/pedals.jpg',
+                'params' => ['category' => 'pedals']
             ],
-            'accessories' => [
-                'title' => 'Аксессуары для гитар',
-                'image' => 'accessories.jpg',
-                'url' => ['guitarsait/category', 'category' => 'accessories']
-            ],
+            [
+                'title' => 'Усилители',
+                'image' => 'images/categories/amplifiers.jpg',
+                'params' => ['category' => 'amplifiers']
+            ]
         ];
 
         return $this->render('home', [
@@ -57,72 +57,28 @@ class GuitarsaitController extends Controller{
 
     public function actionCategory($category)
     {
-        // Проверяем существование категории
-        $categoryData = $this->getCategoryData($category);
-        if (!$categoryData) {
-            throw new NotFoundHttpException('Категория не найдена.');
+        $validCategories = ['guitars', 'strings', 'accessories', 'cases', 'pedals', 'amplifiers'];
+        
+        if (!in_array($category, $validCategories)) {
+            throw new \yii\web\NotFoundHttpException('Категория не найдена');
         }
 
-        // Получаем товары для выбранной категории
-        $products = $this->getProductsByCategory($category);
+        $categoryTitles = [
+            'guitars' => 'Гитары',
+            'strings' => 'Струны',
+            'accessories' => 'Аксессуары',
+            'cases' => 'Чехлы и кейсы',
+            'pedals' => 'Педали эффектов',
+            'amplifiers' => 'Усилители'
+        ];
+
+        $products = Product::findAll(['category' => $category]);
 
         return $this->render('category', [
-            'categoryData' => $categoryData,
-            'products' => $products
+            'products' => $products,
+            'categoryName' => $category,
+            'categoryTitle' => $categoryTitles[$category] ?? ucfirst($category)
         ]);
-    }
-
-    private function getCategoryData($category)
-    {
-        $categories = [
-            'guitars' => [
-                'title' => 'Гитары',
-                'description' => 'Электрогитары и акустические гитары'
-            ],
-            'strings' => [
-                'title' => 'Струны для гитары',
-                'description' => 'Струны различных калибров и производителей'
-            ],
-            'amplifiers' => [
-                'title' => 'Гитарные усилители',
-                'description' => 'Комбоусилители и усилители для гитар'
-            ],
-            'pedals' => [
-                'title' => 'Педали усиления звука',
-                'description' => 'Педали эффектов для гитар'
-            ],
-            'cases' => [
-                'title' => 'Чехлы и кейсы для гитар',
-                'description' => 'Защитные чехлы и кейсы для хранения и транспортировки'
-            ],
-            'accessories' => [
-                'title' => 'Аксессуары для гитар',
-                'description' => 'Различные аксессуары для гитар'
-            ],
-        ];
-
-        return isset($categories[$category]) ? $categories[$category] : null;
-    }
-
-    private function getProductsByCategory($category)
-    {
-        // Здесь можно добавить маппинг категорий к конкретным условиям поиска
-        $conditions = [
-            'guitars' => ['category' => 'guitars'],
-            'strings' => ['category' => 'strings'],
-            'amplifiers' => ['category' => 'amplifiers'],
-            'pedals' => ['category' => 'pedals'],
-            'cases' => ['category' => 'cases'],
-            'accessories' => ['category' => 'accessories'],
-        ];
-
-        if (!isset($conditions[$category])) {
-            return [];
-        }
-
-        return Product::find()
-            ->where($conditions[$category])
-            ->all();
     }
 
     // корзина
@@ -130,7 +86,7 @@ class GuitarsaitController extends Controller{
     {
         $cartItems = Cart::getCart();
         $total = Cart::getTotal();
-        
+
         return $this->render('korzina', [
             'cartItems' => $cartItems,
             'total' => $total
@@ -178,8 +134,9 @@ class GuitarsaitController extends Controller{
     // Добавить поиск товаров
     public function actionSearch($query = '')
     {
-        $products = ProductForm::find()
+        $products = Product::find()
             ->where(['like', 'name', $query])
+            ->orWhere(['like', 'description', $query])
             ->all();
             
         return $this->render('search', [
@@ -190,11 +147,8 @@ class GuitarsaitController extends Controller{
 
     public function actionAddToCart($id)
     {
-        $product = Product::findOne($id);
-        if ($product) {
-            Cart::addToCart($id);
-            Yii::$app->session->setFlash('success', 'Товар добавлен в корзину');
-        }
+        Cart::addToCart($id);
+        Yii::$app->session->setFlash('success', 'Товар добавлен в корзину');
         return $this->redirect(Yii::$app->request->referrer);
     }
 
@@ -202,7 +156,7 @@ class GuitarsaitController extends Controller{
     {
         Cart::clearCart();
         Yii::$app->session->setFlash('success', 'Корзина очищена');
-        return $this->redirect(['home']); // Перенаправление на главную страницу
+        return $this->redirect(['home']);
     }
 
     public function actionRemoveFromCart($id)
@@ -210,6 +164,120 @@ class GuitarsaitController extends Controller{
         Cart::removeFromCart($id);
         Yii::$app->session->setFlash('success', 'Товар удален из корзины');
         return $this->redirect(['korzina']);
+    }
+
+    public function actionCreate()
+    {
+        $model = new Product();
+
+        if ($model->load(Yii::$app->request->post())) {
+            // Отладочная информация
+            Yii::error('POST данные: ' . print_r($_POST, true));
+            
+            // Проверяем, был ли загружен файл
+            if (isset($_FILES['Product']) && isset($_FILES['Product']['tmp_name']['imageFile']) && !empty($_FILES['Product']['tmp_name']['imageFile'])) {
+                $tmpName = $_FILES['Product']['tmp_name']['imageFile'];
+                $name = $_FILES['Product']['name']['imageFile'];
+                $ext = pathinfo($name, PATHINFO_EXTENSION);
+                
+                // Отладка информации о файле
+                Yii::error('Загруженный файл: ' . print_r($_FILES['Product'], true));
+                
+                // Проверяем расширение файла
+                $allowedExtensions = ['png', 'jpg', 'jpeg'];
+                if (!in_array(strtolower($ext), $allowedExtensions)) {
+                    Yii::$app->session->setFlash('error', 'Допустимы только изображения в форматах: png, jpg, jpeg');
+                    return $this->render('create', [
+                        'model' => $model,
+                        'categories' => [
+                            'guitars' => 'Гитары',
+                            'strings' => 'Струны',
+                            'accessories' => 'Аксессуары',
+                            'cases' => 'Чехлы и кейсы',
+                            'pedals' => 'Педали эффектов',
+                            'amplifiers' => 'Усилители'
+                        ]
+                    ]);
+                }
+
+                // Создаем директорию, если она не существует
+                $uploadPath = Yii::getAlias('@webroot/uploads');
+                if (!file_exists($uploadPath)) {
+                    FileHelper::createDirectory($uploadPath, 0777, true);
+                }
+
+                // Генерируем уникальное имя файла
+                $fileName = 'product_' . time() . '.' . $ext;
+                $filePath = $uploadPath . '/' . $fileName;
+
+                // Копируем файл
+                if (copy($tmpName, $filePath)) {
+                    $model->image = $fileName;
+                    Yii::error('Файл успешно скопирован: ' . $filePath);
+                } else {
+                    Yii::error('Ошибка при копировании файла');
+                    Yii::$app->session->addFlash('error', 'Ошибка при загрузке файла');
+                }
+            }
+
+            try {
+                // Проверяем данные перед сохранением
+                Yii::error('Данные модели перед сохранением: ' . print_r($model->attributes, true));
+                
+                // Проверяем подключение к базе данных
+                try {
+                    Yii::$app->db->open();
+                } catch (\Exception $e) {
+                    Yii::error('Ошибка подключения к БД: ' . $e->getMessage());
+                    Yii::$app->session->addFlash('error', 'Ошибка подключения к базе данных: ' . $e->getMessage());
+                    throw $e;
+                }
+                
+                if ($model->validate()) {
+                    Yii::error('Валидация прошла успешно');
+                    
+                    // Пробуем сохранить модель и записываем SQL-запрос в лог
+                    $transaction = Yii::$app->db->beginTransaction();
+                    try {
+                        if ($model->save(false)) {
+                            $transaction->commit();
+                            Yii::error('Товар успешно сохранен с ID: ' . $model->id);
+                            Yii::$app->session->setFlash('success', 'Товар успешно добавлен');
+                            return $this->redirect(['home']);
+                        } else {
+                            $transaction->rollBack();
+                            Yii::error('Ошибка при сохранении: ' . print_r($model->errors, true));
+                            Yii::$app->session->addFlash('error', 'Ошибка при сохранении товара: ' . print_r($model->errors, true));
+                        }
+                    } catch (\Exception $e) {
+                        $transaction->rollBack();
+                        throw $e;
+                    }
+                } else {
+                    Yii::error('Ошибки валидации: ' . print_r($model->errors, true));
+                    foreach ($model->errors as $attribute => $errors) {
+                        foreach ($errors as $error) {
+                            Yii::$app->session->addFlash('error', "$attribute: $error");
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                Yii::error('Исключение при сохранении: ' . $e->getMessage());
+                Yii::$app->session->addFlash('error', 'Произошла ошибка: ' . $e->getMessage());
+            }
+        }
+
+        return $this->render('create', [
+            'model' => $model,
+            'categories' => [
+                'guitars' => 'Гитары',
+                'strings' => 'Струны',
+                'accessories' => 'Аксессуары',
+                'cases' => 'Чехлы и кейсы',
+                'pedals' => 'Педали эффектов',
+                'amplifiers' => 'Усилители'
+            ]
+        ]);
     }
 
 }

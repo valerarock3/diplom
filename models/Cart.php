@@ -4,11 +4,18 @@ namespace app\models;
 
 use Yii;
 use yii\base\Model;
+use yii\web\NotFoundHttpException;
 
 class Cart extends Model
 {
-    public static function addToCart($productId, $quantity = 1)
+    public static function addToCart($productId)
     {
+        // Проверяем существование продукта
+        $product = Product::findOne($productId);
+        if (!$product) {
+            throw new NotFoundHttpException('Товар не найден.');
+        }
+
         $session = Yii::$app->session;
         if (!$session->isActive) {
             $session->open();
@@ -17,12 +24,13 @@ class Cart extends Model
         $cart = $session->get('cart', []);
         
         if (isset($cart[$productId])) {
-            $cart[$productId] += $quantity;
+            $cart[$productId]++;
         } else {
-            $cart[$productId] = $quantity;
+            $cart[$productId] = 1;
         }
         
         $session->set('cart', $cart);
+        return true;
     }
 
     public static function getCart()
@@ -33,31 +41,35 @@ class Cart extends Model
         }
         
         $cart = $session->get('cart', []);
-        $products = [];
+        $items = [];
         
         foreach ($cart as $productId => $quantity) {
             $product = Product::findOne($productId);
             if ($product) {
-                $products[] = [
-                    'product' => $product,
+                $items[] = [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->price,
                     'quantity' => $quantity,
-                    'sum' => $product->price * $quantity
+                    'category' => $product->category,
+                    'image' => $product->image,
+                    'total' => $product->price * $quantity
                 ];
             }
         }
         
-        return $products;
+        return $items;
     }
 
     public static function getTotal()
     {
-        $cart = self::getCart();
+        $items = self::getCart();
         $total = 0;
-        
-        foreach ($cart as $item) {
-            $total += $item['sum'];
+
+        foreach ($items as $item) {
+            $total += $item['total'];
         }
-        
+
         return $total;
     }
 
@@ -82,7 +94,6 @@ class Cart extends Model
         if (!$session->isActive) {
             $session->open();
         }
-        
         $session->remove('cart');
     }
 } 
