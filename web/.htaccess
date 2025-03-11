@@ -1,4 +1,12 @@
 RewriteEngine on
-RewriteCond %{REQUEST_FILENAME} !-d
+
+# Перенаправление с /web на главную страницу
+RewriteCond %{REQUEST_URI} ^/web/?$
+RewriteRule ^(.*)$ index.php [L]
+
+# Если файл или директория существуют, используем их напрямую
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule . index.php [L]
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Перенаправляем все запросы на index.php
+RewriteRule . index.php

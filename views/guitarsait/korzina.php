@@ -1,176 +1,92 @@
 <?php
 use yii\helpers\Html;
+use yii\helpers\Url;
+
+/* @var $this yii\web\View */
+/* @var $cartItems array */
+/* @var $total float */
+
+$this->title = 'Корзина';
 ?>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Корзина</title>
-    <link rel="stylesheet" href="rew.css">
-    <link rel="stylesheet" href="home.css">
-</head>
-<body>
-    <div class="sait">
-        <div class="header">
-            <?= Html::a('Домашняя страница', ['home'], ['class' => 'home-link']) ?>
-            <h1>Корзина</h1>
-            
-            <?php if (!empty($cartItems)): ?>
-                <div class="cart-items">
-                    <?php foreach ($cartItems as $item): ?>
-                        <div class="cart-item">
-                            <div class="product-image">
-                                <?= Html::img('@web/images/products/' . $item['product']->category . '/' . $item['product']->image, [
-                                    'alt' => $item['product']->name
-                                ]) ?>
+<div class="container mt-4">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><?= Html::a('Главная', ['home']) ?></li>
+            <li class="breadcrumb-item active" aria-current="page">Корзина</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Корзина</h1>
+        <?= Html::a('← Вернуться в магазин', ['home'], [
+            'class' => 'btn btn-primary'
+        ]) ?>
+    </div>
+
+    <?php if (!empty($cartItems)): ?>
+        <div class="row">
+            <div class="col-md-8">
+                <?php foreach ($cartItems as $item): ?>
+                    <div class="card mb-3">
+                        <div class="row g-0">
+                            <div class="col-md-3">
+                                <?php if ($item['image']): ?>
+                                    <img src="<?= Url::to('@web/uploads/' . $item['image']) ?>"
+                                         class="img-fluid rounded-start"
+                                         alt="<?= Html::encode($item['name']) ?>"
+                                         style="max-height: 200px; object-fit: cover;">
+                                <?php endif; ?>
                             </div>
-                            <div class="product-info">
-                                <h3><?= Html::encode($item['product']->name) ?></h3>
-                                <p>Цена: <?= number_format($item['product']->price, 2, '.', ' ') ?> ₽</p>
-                                <p>Количество: <?= $item['quantity'] ?></p>
-                                <p>Сумма: <?= number_format($item['sum'], 2, '.', ' ') ?> ₽</p>
-                                <?= Html::a('Удалить', ['remove-from-cart', 'id' => $item['product']->id], [
-                                    'class' => 'delete-btn',
-                                    'data' => [
-                                        'confirm' => 'Вы уверены, что хотите удалить этот товар из корзины?',
-                                        'method' => 'post',
-                                    ],
-                                ]) ?>
+                            <div class="col-md-9">
+                                <div class="card-body">
+                                    <h5 class="card-title"><?= Html::encode($item['name']) ?></h5>
+                                    <p class="card-text">
+                                        <strong>Цена:</strong> <?= number_format($item['price'], 0, '.', ' ') ?> ₽<br>
+                                        <strong>Количество:</strong> <?= $item['quantity'] ?><br>
+                                        <strong>Сумма:</strong> <?= number_format($item['total'], 0, '.', ' ') ?> ₽
+                                    </p>
+                                    <?= Html::a('Удалить', ['remove-from-cart', 'id' => $item['id']], [
+                                        'class' => 'btn btn-danger',
+                                        'data' => [
+                                            'method' => 'post',
+                                            'confirm' => 'Вы уверены, что хотите удалить этот товар из корзины?'
+                                        ]
+                                    ]) ?>
+                                </div>
                             </div>
                         </div>
-                    <?php endforeach; ?>
-                    
-                    <div class="cart-total">
-                        <h3>Итого: <?= number_format($total, 2, '.', ' ') ?> ₽</h3>
-                        <?= Html::a('Оформить заказ', ['order'], ['class' => 'order-btn']) ?>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Итого</h5>
+                        <p class="card-text">
+                            <strong>Общая сумма:</strong><br>
+                            <span class="h3"><?= number_format($total, 0, '.', ' ') ?> ₽</span>
+                        </p>
+                        <?= Html::a('Оформить заказ', ['checkout'], [
+                            'class' => 'btn btn-success btn-lg w-100 mb-2'
+                        ]) ?>
                         <?= Html::a('Очистить корзину', ['clear-cart'], [
-                            'class' => 'clear-btn',
+                            'class' => 'btn btn-outline-danger w-100',
                             'data' => [
-                                'confirm' => 'Вы уверены, что хотите очистить корзину?',
                                 'method' => 'post',
-                            ],
+                                'confirm' => 'Вы уверены, что хотите очистить корзину?'
+                            ]
                         ]) ?>
                     </div>
                 </div>
-            <?php else: ?>
-                <p class="empty-cart">У вас пока нет товаров в корзине</p>
-                <?= Html::a('Вернуться к покупкам', ['home'], ['class' => 'continue-shopping']) ?>
-            <?php endif; ?>
+            </div>
         </div>
-    </div>
-
-    <style>
-    .cart-items {
-        padding: 20px;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    .cart-item {
-        display: flex;
-        border: 1px solid #ddd;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-radius: 8px;
-        background: white;
-    }
-
-    .product-image img {
-        max-width: 150px;
-        height: auto;
-        margin-right: 20px;
-    }
-
-    .product-info {
-        flex-grow: 1;
-    }
-
-    .product-info h3 {
-        margin: 0 0 10px 0;
-        color: #333;
-    }
-
-    .price, .quantity, .sum {
-        margin: 5px 0;
-        color: #666;
-    }
-
-    .delete-btn {
-        display: inline-block;
-        padding: 8px 16px;
-        background-color: #dc3545;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        border: none;
-        cursor: pointer;
-    }
-
-    .delete-btn:hover {
-        background-color: #c82333;
-        text-decoration: none;
-        color: white;
-    }
-
-    .cart-total {
-        text-align: right;
-        margin-top: 20px;
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
-    }
-
-    .order-btn, .clear-btn {
-        display: inline-block;
-        padding: 10px 20px;
-        margin: 5px;
-        border-radius: 4px;
-        text-decoration: none;
-    }
-
-    .order-btn {
-        background-color: #28a745;
-        color: white;
-    }
-
-    .clear-btn {
-        background-color: #ffc107;
-        color: #000;
-    }
-
-    .empty-cart {
-        text-align: center;
-        color: #666;
-        margin: 30px 0;
-    }
-
-    .continue-shopping {
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        margin-top: 15px;
-    }
-
-    .home-link {
-        display: inline-block;
-        padding: 8px 16px;
-        background-color: #007bff;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        margin-bottom: 20px;
-    }
-
-    .home-link:hover {
-        background-color: #0056b3;
-        text-decoration: none;
-        color: white;
-    }
-    </style>
-</body>
-</html>
+    <?php else: ?>
+        <div class="alert alert-info">
+            <h4 class="alert-heading">Ваша корзина пуста</h4>
+            <p>Добавьте товары в корзину, чтобы оформить заказ.</p>
+            <?= Html::a('Перейти к покупкам', ['home'], ['class' => 'btn btn-primary mt-3']) ?>
+        </div>
+    <?php endif; ?>
+</div>

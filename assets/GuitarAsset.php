@@ -11,14 +11,13 @@ class GuitarAsset extends AssetBundle
     public $basePath = '@webroot';
     public $baseUrl = '@web';
     public $css = [
-        // 'css/styles.css',
-        'css/home.css'
+        'css/style.css', // Новый файл стилей
     ];
     public $js = [
-        // Добавьте JS файлы, если необходимо
+        // JavaScript файлы если нужны
     ];
     public $depends = [
         'yii\web\YiiAsset',
-        'yii\bootstrap5\BootstrapAsset'
+        'yii\bootstrap5\BootstrapAsset',
     ];
 }
