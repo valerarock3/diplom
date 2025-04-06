@@ -10,6 +10,8 @@ use yii\web\UploadedFile;
 use app\models\Product;
 use app\models\Cart;
 use yii\helpers\FileHelper;
+use app\models\Receipt;
+use app\models\PaymentForm;
 
 class GuitarsaitController extends Controller{
 
@@ -278,6 +280,71 @@ class GuitarsaitController extends Controller{
                 'amplifiers' => 'Усилители'
             ]
         ]);
+    }
+
+    public function actionPayment()
+    {
+        $cartItems = Cart::getCart();
+        $total = Cart::getTotal();
+
+        if (empty($cartItems) || $total <= 0) {
+            Yii::$app->session->setFlash('error', 'Корзина пуста');
+            return $this->redirect(['korzina']);
+        }
+
+        $model = new PaymentForm();
+
+        if (Yii::$app->request->isPost) {
+            if ($model->load(Yii::$app->request->post()) && $model->validate()) {
+                try {
+                    // Создаем чек в базе данных
+                    $receipt = Receipt::createFromCart($cartItems, $model->cardNumber);
+                    
+                    // Очищаем корзину после успешной оплаты
+                    Cart::clearCart();
+                    
+                    // Перенаправляем на страницу чека
+                    return $this->redirect(['receipt', 'id' => $receipt->id]);
+                } catch (\Exception $e) {
+                    Yii::$app->session->setFlash('error', 'Ошибка при обработке платежа: ' . $e->getMessage());
+                }
+            }
+        }
+
+        return $this->render('payment', [
+            'model' => $model,
+            'total' => $total,
+        ]);
+    }
+
+    public function actionReceipt($id)
+    {
+        $receipt = Receipt::find()
+            ->with('items') // Загружаем связанные товары
+            ->where(['id' => $id])
+            ->one();
+        
+        if (!$receipt) {
+            Yii::$app->session->setFlash('error', 'Чек не найден');
+            return $this->redirect(['home']);
+        }
+        
+        return $this->render('receipt', [
+            'receipt' => $receipt
+        ]);
+    }
+
+    // Убедитесь, что у вас есть метод behaviors() для настройки CSRF
+    public function behaviors()
+    {
+        return [
+            'verbs' => [
+                'class' => \yii\filters\VerbFilter::className(),
+                'actions' => [
+                    'payment' => ['post', 'get'], // Разрешаем оба метода
+                ],
+            ],
+        ];
     }
 
 }

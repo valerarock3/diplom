@@ -32,8 +32,29 @@ $this->title = isset($categoryTitles[$categoryName]) ? $categoryTitles[$category
         <?= Html::a('← Вернуться в магазин', ['guitarsait/home'], ['class' => 'btn btn-outline-primary']) ?>
     </div>
 
+    <!-- Добавляем блок фильтрации -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row align-items-end">
+                <div class="col-md-4">
+                    <label for="min-price" class="form-label">Минимальная цена</label>
+                    <input type="number" class="form-control" id="min-price" min="0" step="100">
+                </div>
+                <div class="col-md-4">
+                    <label for="max-price" class="form-label">Максимальная цена</label>
+                    <input type="number" class="form-control" id="max-price" min="0" step="100">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary w-100 btn-filter">
+                        <i class="fas fa-filter"></i> Фильтровать
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?php if (!empty($products)): ?>
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="products-container">
             <?php foreach ($products as $product): ?>
                 <div class="col">
                     <div class="card h-100">
@@ -85,4 +106,38 @@ $this->title = isset($categoryTitles[$categoryName]) ? $categoryTitles[$category
 
 <?php
 $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+// Добавляем подключение jQuery
+$this->registerJsFile('https://code.jquery.com/jquery-3.6.0.min.js', ['position' => \yii\web\View::POS_HEAD]);
+
+$this->registerJs("
+    $(document).ready(function() {
+        $('.btn-filter').on('click', function() {
+            const minPrice = parseFloat($('#min-price').val()) || 0;
+            const maxPrice = parseFloat($('#max-price').val()) || Infinity;
+            
+            $('.col').each(function() {
+                const priceText = $(this).find('.text-primary').text();
+                const price = parseFloat(priceText.replace(/[^0-9]/g, ''));
+                
+                if (price >= minPrice && (maxPrice === Infinity || price <= maxPrice)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+            
+            if ($('.col:visible').length === 0) {
+                if ($('#no-results-message').length === 0) {
+                    $('#products-container').after(
+                        '<div id=\"no-results-message\" class=\"alert alert-info mt-3\">' +
+                        'По вашему запросу ничего не найдено. Попробуйте изменить параметры фильтра.' +
+                        '</div>'
+                    );
+                }
+            } else {
+                $('#no-results-message').remove();
+            }
+        });
+    });
+");
 ?>

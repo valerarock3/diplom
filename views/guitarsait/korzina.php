@@ -19,9 +19,7 @@ $this->title = 'Корзина';
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Корзина</h1>
-        <?= Html::a('← Вернуться в магазин', ['home'], [
-            'class' => 'btn btn-primary'
-        ]) ?>
+        <?= Html::a('← Вернуться в магазин', ['home'], ['class' => 'btn btn-primary']) ?>
     </div>
 
     <?php if (!empty($cartItems)): ?>
@@ -68,8 +66,8 @@ $this->title = 'Корзина';
                             <strong>Общая сумма:</strong><br>
                             <span class="h3"><?= number_format($total, 0, '.', ' ') ?> ₽</span>
                         </p>
-                        <?= Html::a('Оформить заказ', ['checkout'], [
-                            'class' => 'btn btn-success btn-lg w-100 mb-2'
+                        <?= Html::a('Оформить заказ', ['payment'], [
+                            'class' => 'btn btn-success btn-lg w-100 mb-2',
                         ]) ?>
                         <?= Html::a('Очистить корзину', ['clear-cart'], [
                             'class' => 'btn btn-outline-danger w-100',
@@ -84,9 +82,13 @@ $this->title = 'Корзина';
         </div>
     <?php else: ?>
         <div class="alert alert-info">
-            <h4 class="alert-heading">Ваша корзина пуста</h4>
-            <p>Добавьте товары в корзину, чтобы оформить заказ.</p>
-            <?= Html::a('Перейти к покупкам', ['home'], ['class' => 'btn btn-primary mt-3']) ?>
+            <h4 class="text-center">Ваша корзина пуста</h4>
+            <p class="text-center">Добавьте товары в корзину, чтобы оформить заказ.</p>
+            <div class="text-center mt-3">
+                <?= Html::a('Перейти к покупкам', ['home'], [
+                    'class' => 'btn btn-primary'
+                ]) ?>
+            </div>
         </div>
     <?php endif; ?>
 </div>
