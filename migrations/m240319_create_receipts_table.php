@@ -69,4 +69,16 @@ class m240319_create_receipts_table extends Migration
         $this->dropTable('receipt_items');
         $this->dropTable('receipts');
     }
+
+    private function getCategories()
+    {
+        return [
+            'guitars' => 'Гитары',
+            'strings' => 'Струны',
+            'accessories' => 'Аксессуары',
+            'cases' => 'Чехлы и кейсы',
+            'pedals' => 'Педали эффектов',
+            'amplifiers' => 'Усилители'
+        ];
+    }
 } 

@@ -12,6 +12,7 @@ use app\models\Cart;
 use yii\helpers\FileHelper;
 use app\models\Receipt;
 use app\models\PaymentForm;
+use yii\helpers\Html;
 
 class GuitarsaitController extends Controller{
 
@@ -332,6 +333,35 @@ class GuitarsaitController extends Controller{
         return $this->render('receipt', [
             'receipt' => $receipt
         ]);
+    }
+
+    public function actionNew()
+    {
+        $categories = [
+            'guitars', 'strings', 'accessories', 'cases', 'pedals', 'amplifiers'
+        ];
+        $newProducts = [];
+        foreach ($categories as $category) {
+            $product = Product::find()->where(['category' => $category])->orderBy('RAND()')->one();
+            if ($product) {
+                $newProducts[] = $product;
+            }
+        }
+        return $this->render('new', [
+            'products' => $newProducts
+        ]);
+    }
+
+    public function actionAddAllToCart()
+    {
+        $ids = Yii::$app->request->post('ids', []);
+        if (is_array($ids)) {
+            foreach ($ids as $id) {
+                Cart::addToCart($id);
+            }
+            Yii::$app->session->setFlash('success', 'Все товары добавлены в корзину!');
+        }
+        return $this->redirect(['korzina']);
     }
 
     // Убедитесь, что у вас есть метод behaviors() для настройки CSRF

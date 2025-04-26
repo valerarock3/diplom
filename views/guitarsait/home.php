@@ -14,6 +14,21 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
 
 <div class="container mt-5">
     <!-- Поиск и корзина -->
+    <div class="row mb-2">
+        <div class="col-12">
+            <div class="header-buttons">
+                <?= Html::a('<i class="fas fa-plus"></i> Добавить товар', ['guitarsait/create'], [
+                    'class' => 'btn btn-success'
+                ]) ?>
+                <?= Html::a('<i class="fas fa-star"></i> Новинка', ['guitarsait/new'], [
+                    'class' => 'btn btn-warning'
+                ]) ?>
+                <?= Html::a('<i class="fas fa-shopping-cart"></i> Корзина', ['guitarsait/korzina'], [
+                    'class' => 'btn btn-primary'
+                ]) ?>
+            </div>
+        </div>
+    </div>
     <div class="row mb-4">
         <div class="col-md-8">
             <form method="get" class="d-flex gap-2 search-form">
@@ -24,17 +39,6 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
                 ]) ?>
                 <?= Html::submitButton('Поиск', ['class' => 'btn btn-primary']) ?>
             </form>
-        </div>
-        <div class="col-md-4 text-end">
-            <?= Html::a('<i class="fas fa-plus"></i> Добавить товар', ['guitarsait/create'], [
-                'class' => 'btn btn-success me-2'
-            ]) ?>
-            <?= Html::a('<i class="fas fa-shopping-cart"></i> Корзина', ['guitarsait/korzina'], [
-                'class' => 'btn btn-primary'
-            ]) ?>
-            <?= Html::a('Отзывы', ['guitarsait/reviews'], [
-                'class' => 'btn btn-outline-secondary ms-2'
-            ]) ?>
         </div>
     </div>
 
