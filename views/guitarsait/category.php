@@ -58,13 +58,13 @@ $this->title = isset($categoryTitles[$categoryName]) ? $categoryTitles[$category
             <?php foreach ($products as $product): ?>
                 <div class="col">
                     <div class="card h-100">
-                        <?php if ($product->image): ?>
+                        <?php if ($product->image && file_exists(Yii::getAlias('@webroot/uploads/' . $product->image))): ?>
                             <img src="<?= Url::to('@web/uploads/' . $product->image) ?>" 
                                  class="card-img-top"
                                  alt="<?= Html::encode($product->name) ?>"
                                  style="height: 200px; object-fit: contain; padding: 1rem;">
                         <?php else: ?>
-                            <img src="<?= Url::to('@web/images/no-image.jpg') ?>" 
+                            <img src="<?= Url::to('@web/images/no-image.svg') ?>" 
                                  class="card-img-top"
                                  alt="Изображение отсутствует"
                                  style="height: 200px; object-fit: contain; padding: 1rem;">

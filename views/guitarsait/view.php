@@ -51,16 +51,19 @@ $this->registerJs("
         <div class="col-md-6">
             <div class="card mb-4">
                 <div class="card-body text-center">
-                    <?php if ($model->image): ?>
+                    <?php if (!empty($model->image) && file_exists(Yii::getAlias('@webroot/uploads/' . $model->image))): ?>
                         <img src="<?= Url::to('@web/uploads/' . $model->image) ?>" 
                              alt="<?= Html::encode($model->name) ?>" 
                              class="img-fluid" 
                              style="max-height: 400px; object-fit: contain;">
                     <?php else: ?>
-                        <img src="<?= Url::to('@web/images/no-image.jpg') ?>" 
-                             alt="Изображение отсутствует" 
-                             class="img-fluid" 
-                             style="max-height: 400px; object-fit: contain;">
+                        <div class="d-flex align-items-center justify-content-center text-center"
+                             style="height: 400px; background-color: #f8f9fa; color: #6c757d; border-radius: 0.25rem;">
+                            <div>
+                                <i class="fas fa-image fa-5x mb-3"></i>
+                                <div class="h5">Изображение отсутствует</div>
+                            </div>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>

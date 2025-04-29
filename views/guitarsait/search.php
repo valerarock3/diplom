@@ -62,16 +62,19 @@ $this->title = 'Поиск товаров';
             <?php foreach ($products as $product): ?>
                 <div class="col">
                     <div class="card h-100">
-                        <?php if ($product->image): ?>
+                        <?php if (!empty($product->image) && file_exists(Yii::getAlias('@webroot/uploads/' . $product->image))): ?>
                             <img src="<?= Url::to('@web/uploads/' . $product->image) ?>" 
                                  class="card-img-top" 
                                  alt="<?= Html::encode($product->name) ?>"
                                  style="height: 200px; object-fit: contain; padding: 1rem;">
                         <?php else: ?>
-                            <img src="<?= Url::to('@web/images/no-image.jpg') ?>" 
-                                 class="card-img-top"
-                                 alt="Изображение отсутствует"
-                                 style="height: 200px; object-fit: contain; padding: 1rem;">
+                            <div class="card-img-top d-flex align-items-center justify-content-center text-center"
+                                 style="height: 200px; background-color: #f8f9fa; color: #6c757d; padding: 1rem;">
+                                <div>
+                                    <i class="fas fa-image fa-3x mb-2"></i>
+                                    <div>Изображение отсутствует</div>
+                                </div>
+                            </div>
                         <?php endif; ?>
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title"><?= Html::encode($product->name) ?></h5>

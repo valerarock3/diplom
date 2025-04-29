@@ -24,9 +24,15 @@ $this->registerCssFile('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15
         <?php foreach ($categories as $category): ?>
             <div class="col">
                 <div class="card h-100">
-                    <img src="<?= Url::to('@web/' . $category['image']) ?>" 
-                         class="card-img-top" 
-                         alt="<?= Html::encode($category['title']) ?>">
+                    <?php if (!empty($category['image']) && file_exists(Yii::getAlias('@webroot/' . $category['image']))): ?>
+                        <img src="<?= Url::to('@web/' . $category['image']) ?>" 
+                             class="card-img-top" 
+                             alt="<?= Html::encode($category['title']) ?>">
+                    <?php else: ?>
+                        <img src="<?= Url::to('@web/images/no-image.png') ?>" 
+                             class="card-img-top" 
+                             alt="Изображение отсутствует">
+                    <?php endif; ?>
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title" style="min-height: 48px;"><?= Html::encode($category['title']) ?></h5>
                         <?= Html::a('Перейти в категорию', 
