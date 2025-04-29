@@ -87,6 +87,9 @@ class GuitarsaitController extends Controller{
     // корзина
     public function actionKorzina()
     {
+        // Нормализуем корзину перед отображением
+        Cart::normalizeCart();
+        
         $cartItems = Cart::getCart();
         $total = Cart::getTotal();
 
@@ -154,7 +157,24 @@ class GuitarsaitController extends Controller{
         
         $product = Product::findOne($id);
         if ($product) {
-            Cart::addToCart($id);
+            $cart = Yii::$app->session->get('cart', []);
+            
+            // Проверяем, есть ли уже такой товар в корзине
+            if (isset($cart[$id])) {
+                // Если товар уже есть, увеличиваем его количество
+                $cart[$id]['quantity'] += 1;
+            } else {
+                // Если товара нет, добавляем его с количеством 1
+                $cart[$id] = [
+                    'id' => $id,
+                    'name' => $product->name,
+                    'price' => $product->price,
+                    'quantity' => 1
+                ];
+            }
+            
+            Yii::$app->session->set('cart', $cart);
+            
             return [
                 'success' => true,
                 'message' => 'Товар добавлен в корзину'
@@ -169,6 +189,15 @@ class GuitarsaitController extends Controller{
     public function actionClearCart()
     {
         Cart::clearCart();
+        
+        if (Yii::$app->request->isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'success' => true,
+                'message' => 'Корзина очищена'
+            ];
+        }
+        
         Yii::$app->session->setFlash('success', 'Корзина очищена');
         return $this->redirect(['home']);
     }
@@ -304,29 +333,102 @@ class GuitarsaitController extends Controller{
             return $this->redirect(['korzina']);
         }
 
-        $model = new PaymentForm();
+        return $this->render('payment', [
+            'total' => $total
+        ]);
+    }
 
-        if (Yii::$app->request->isPost) {
-            if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-                try {
-                    // Создаем чек в базе данных
-                    $receipt = Receipt::createFromCart($cartItems, $model->cardNumber);
-                    
-                    // Очищаем корзину после успешной оплаты
-                    Cart::clearCart();
-                    
-                    // Перенаправляем на страницу чека
-                    return $this->redirect(['receipt', 'id' => $receipt->id]);
-                } catch (\Exception $e) {
-                    Yii::$app->session->setFlash('error', 'Ошибка при обработке платежа: ' . $e->getMessage());
-                }
-            }
+    public function actionProcessPayment()
+    {
+        if (!Yii::$app->request->isPost) {
+            return $this->redirect(['payment']);
         }
 
-        return $this->render('payment', [
-            'model' => $model,
-            'total' => $total,
-        ]);
+        // Получаем данные из формы
+        $cardNumber = Yii::$app->request->post('cardNumber');
+        $expDate = Yii::$app->request->post('expDate');
+        $cvv = Yii::$app->request->post('cvv');
+        $cardHolder = Yii::$app->request->post('cardHolder');
+
+        // Валидация данных
+        $paymentForm = new PaymentForm();
+        $paymentForm->cardNumber = preg_replace('/\s+/', '', $cardNumber);
+        $paymentForm->expDate = $expDate;
+        $paymentForm->cvv = $cvv;
+        $paymentForm->cardHolder = $cardHolder;
+
+        if (!$paymentForm->validate()) {
+            Yii::$app->session->setFlash('error', 'Ошибка валидации данных карты');
+            return $this->redirect(['payment']);
+        }
+
+        try {
+            // Получаем данные корзины до её очистки
+            $cartItems = Cart::getCart();
+            $total = Cart::getTotal();
+
+            if (empty($cartItems) || $total <= 0) {
+                throw new \Exception('Корзина пуста');
+            }
+
+            // Начинаем транзакцию
+            $transaction = Yii::$app->db->beginTransaction();
+
+            try {
+                // Создаем новый чек
+                $receipt = new Receipt();
+                $receipt->order_id = 'ORDER-' . time() . '-' . rand(1000, 9999);
+                $receipt->total_amount = $total;
+                $receipt->card_last_digits = substr($paymentForm->cardNumber, -4);
+                $receipt->payment_date = date('Y-m-d H:i:s');
+                $receipt->status = 'Оплачено';
+                $receipt->created_at = date('Y-m-d H:i:s');
+
+                if (!$receipt->save()) {
+                    throw new \Exception('Ошибка сохранения чека: ' . print_r($receipt->errors, true));
+                }
+
+                // Сохраняем товары чека
+                foreach ($cartItems as $item) {
+                    $receiptItem = new \app\models\ReceiptItem();
+                    $receiptItem->receipt_id = $receipt->id;
+                    $receiptItem->product_id = $item['id'];
+                    $receiptItem->product_name = $item['name'];
+                    $receiptItem->quantity = $item['quantity'];
+                    $receiptItem->price = $item['price'];
+                    $receiptItem->total = $item['price'] * $item['quantity'];
+
+                    if (!$receiptItem->save()) {
+                        throw new \Exception('Ошибка сохранения позиции чека: ' . print_r($receiptItem->errors, true));
+                    }
+                }
+
+                // Если все успешно, фиксируем транзакцию
+                $transaction->commit();
+
+                // Очищаем корзину после успешной оплаты
+                Cart::clearCart();
+
+                // Передаем данные в представление чека
+                return $this->render('receipt', [
+                    'orderNumber' => $receipt->order_id,
+                    'cardNumber' => $receipt->card_last_digits,
+                    'cardHolder' => $paymentForm->cardHolder,
+                    'total' => $receipt->total_amount,
+                    'items' => $cartItems,
+                    'date' => $receipt->payment_date
+                ]);
+
+            } catch (\Exception $e) {
+                // В случае ошибки откатываем транзакцию
+                $transaction->rollBack();
+                throw $e;
+            }
+
+        } catch (\Exception $e) {
+            Yii::$app->session->setFlash('error', 'Ошибка при обработке платежа: ' . $e->getMessage());
+            return $this->redirect(['payment']);
+        }
     }
 
     public function actionReceipt($id)
@@ -397,6 +499,27 @@ class GuitarsaitController extends Controller{
         
         Yii::$app->session->setFlash('error', 'Не выбраны товары');
         return $this->redirect(['korzina']);
+    }
+
+    public function actionGetCartCount()
+    {
+        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        $totalCount = 0;
+        $cartItems = Yii::$app->session->get('cart', []);
+        
+        foreach ($cartItems as $item) {
+            if (isset($item['quantity'])) {
+                $totalCount += (int)$item['quantity'];
+            } else {
+                $totalCount += 1;
+            }
+        }
+        
+        return [
+            'count' => $totalCount,
+            'success' => true
+        ];
     }
 
     // Убедитесь, что у вас есть метод behaviors() для настройки CSRF

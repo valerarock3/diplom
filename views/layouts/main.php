@@ -125,6 +125,44 @@ if (!empty($flashMessages)) {
                 transform: scaleX(1);
             }
         }
+        .navbar-nav {
+            flex-grow: 1;
+        }
+        .navbar-nav .nav-item {
+            margin-right: 15px;
+        }
+        .search-form {
+            display: flex;
+            align-items: center;
+        }
+        .search-form .form-control {
+            border-radius: 4px 0 0 4px;
+        }
+        .search-form .btn {
+            border-radius: 0 4px 4px 0;
+        }
+        .header-buttons {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .cart-counter {
+            margin-left: 5px;
+            font-size: 0.8em;
+            padding: 0.25em 0.6em;
+            border-radius: 10px;
+            position: relative;
+            top: -1px;
+            display: inline-block;
+        }
+        .badge {
+            margin-left: 5px;
+            font-size: 0.8em;
+            padding: 0.25em 0.6em;
+            border-radius: 10px;
+            position: relative;
+            top: -1px;
+        }
     </style>
 </head>
 <body class="d-flex flex-column h-100">
@@ -162,14 +200,78 @@ if (!empty($flashMessages)) {
             ['/guitarsait/new'],
             ['class' => 'btn btn-outline-warning d-flex align-items-center', 'style' => 'height: 38px;']
         ) ?>
-        <?= Html::a(
-            '<i class="fas fa-shopping-cart"></i> Корзина',
-            ['/guitarsait/korzina'],
-            ['class' => 'btn btn-outline-light d-flex align-items-center', 'style' => 'height: 38px;']
-        ) ?>
+        <a href="<?= Url::to(['/guitarsait/korzina']) ?>" class="btn btn-outline-light d-flex align-items-center" style="height: 38px;">
+            <i class="fas fa-shopping-cart"></i>
+            <span style="margin-left: 5px;">Корзина</span>
+            <?php
+            $cartItems = Yii::$app->session->get('cart', []);
+            $totalCount = 0;
+            foreach ($cartItems as $item) {
+                if (isset($item['quantity'])) {
+                    $totalCount += (int)$item['quantity'];
+                } else {
+                    $totalCount += 1;
+                }
+            }
+            if ($totalCount > 0): ?>
+                <span class="badge bg-danger rounded-pill ms-1"><?= $totalCount ?></span>
+            <?php endif; ?>
+        </a>
     </div>
     <?php NavBar::end(); ?>
 </header>
+
+<?php
+$cartCountUrl = Url::to(['/guitarsait/get-cart-count']);
+$js = <<<JS
+    function updateCartCounter() {
+        fetch('{$cartCountUrl}', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const cartLink = document.querySelector('a[href*="guitarsait/korzina"]');
+            if (cartLink) {
+                let badge = cartLink.querySelector('.badge');
+                if (data.count > 0) {
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'badge bg-danger rounded-pill ms-1';
+                        cartLink.appendChild(badge);
+                    }
+                    badge.textContent = data.count;
+                } else if (badge) {
+                    badge.remove();
+                }
+            }
+        })
+        .catch(error => console.error('Ошибка при обновлении счетчика:', error));
+    }
+
+    // Обновляем счетчик при загрузке страницы
+    document.addEventListener('DOMContentLoaded', updateCartCounter);
+    
+    // Обновляем счетчик после любых изменений в корзине
+    document.addEventListener('click', function(e) {
+        const target = e.target;
+        if (target.closest('.add-to-cart') || 
+            target.closest('.remove-from-cart') || 
+            target.closest('.clear-cart') ||
+            target.closest('[data-action="increase-quantity"]') ||
+            target.closest('[data-action="decrease-quantity"]')) {
+            setTimeout(updateCartCounter, 100);
+        }
+    });
+
+    // Периодическое обновление счетчика
+    setInterval(updateCartCounter, 1000);
+JS;
+$this->registerJs($js);
+?>
 
 <main role="main" class="flex-shrink-0">
     <div class="container">
@@ -276,6 +378,10 @@ function addToCart(url) {
     .then(response => response.json())
     .then(data => {
         showNotification(data.success ? 'Товар успешно добавлен в корзину' : data.message, data.success ? 'success' : 'error');
+        if (data.success) {
+            // Обновляем счетчик корзины
+            updateCartCounter();
+        }
     })
     .catch(error => {
         console.error('Ошибка:', error);
@@ -283,6 +389,29 @@ function addToCart(url) {
     });
     
     return false; // Предотвращаем стандартное действие ссылки
+}
+
+// Функция для обновления счетчика корзины через AJAX
+function updateCartCounter() {
+    fetch('<?= Url::to(['/guitarsait/get-cart-count']) ?>', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.count !== undefined) {
+            const counterElement = document.querySelector('.cart-counter');
+            if (counterElement) {
+                counterElement.textContent = data.count;
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка при обновлении счетчика корзины:', error);
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function() {

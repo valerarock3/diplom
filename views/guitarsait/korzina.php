@@ -7,34 +7,6 @@ use yii\helpers\Url;
 /* @var $total float */
 
 $this->title = 'Корзина';
-
-// Добавляем JavaScript для проверки флага уведомления
-$this->registerJs("
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('Checking for notification flag');
-        
-        // Проверяем как sessionStorage, так и параметр URL
-        var showNotificationFlag = sessionStorage.getItem('showCartNotification');
-        var urlParams = new URLSearchParams(window.location.search);
-        var showNotificationParam = urlParams.get('showNotification');
-        
-        console.log('Flag in sessionStorage:', showNotificationFlag);
-        console.log('Flag in URL:', showNotificationParam);
-        
-        // Показываем уведомление, если установлен любой из флагов
-        if (showNotificationFlag === 'true' || showNotificationParam === 'true') {
-            console.log('Showing notification');
-            
-            // Удаляем флаг из sessionStorage
-            sessionStorage.removeItem('showCartNotification');
-            
-            // Небольшая задержка для гарантии полной загрузки DOM
-            setTimeout(function() {
-                showNotification('Набор товаров успешно добавлен в корзину!', 'success');
-            }, 300);
-        }
-    });
-");
 ?>
 
 <div class="container mt-4">
@@ -57,11 +29,19 @@ $this->registerJs("
                     <div class="card mb-3">
                         <div class="row g-0">
                             <div class="col-md-3">
-                                <?php if ($item['image']): ?>
+                                <?php if (!empty($item['image']) && file_exists(Yii::getAlias('@webroot/uploads/' . $item['image']))): ?>
                                     <img src="<?= Url::to('@web/uploads/' . $item['image']) ?>"
                                          class="img-fluid rounded-start"
                                          alt="<?= Html::encode($item['name']) ?>"
-                                         style="max-height: 200px; object-fit: cover;">
+                                         style="width: 100%; height: 200px; object-fit: cover;">
+                                <?php else: ?>
+                                    <div class="rounded-start d-flex align-items-center justify-content-center text-center"
+                                         style="width: 100%; height: 200px; background-color: #f8f9fa; color: #6c757d;">
+                                        <div>
+                                            <i class="fas fa-image fa-3x mb-2"></i>
+                                            <div>Изображение отсутствует</div>
+                                        </div>
+                                    </div>
                                 <?php endif; ?>
                             </div>
                             <div class="col-md-9">
@@ -99,10 +79,7 @@ $this->registerJs("
                         ]) ?>
                         <?= Html::a('Очистить корзину', ['clear-cart'], [
                             'class' => 'btn btn-danger w-100',
-                            'data' => [
-                                'method' => 'post',
-                                'confirm' => 'Вы уверены, что хотите очистить корзину?'
-                            ]
+                            'id' => 'clear-cart-btn'
                         ]) ?>
                     </div>
                 </div>
@@ -120,3 +97,46 @@ $this->registerJs("
         </div>
     <?php endif; ?>
 </div>
+
+<?php
+$this->registerJs("
+    // Обработчик для кнопки 'Очистить корзину'
+    document.getElementById('clear-cart-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if(confirm('Вы уверены, что хотите очистить корзину?')) {
+            fetch(this.getAttribute('href'), {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-Token': '" . Yii::$app->request->getCsrfToken() . "',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Показываем уведомление
+                    showNotification('Корзина успешно очищена', 'success');
+                    
+                    // Обновляем счетчик корзины
+                    if (typeof updateCartCounter === 'function') {
+                        updateCartCounter();
+                    }
+                    
+                    // Перезагружаем страницу через небольшую задержку
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showNotification(data.message || 'Не удалось очистить корзину', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                showNotification('Произошла ошибка при очистке корзины', 'error');
+            });
+        }
+    });
+");
+?>

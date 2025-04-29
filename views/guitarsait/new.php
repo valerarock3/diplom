@@ -9,10 +9,30 @@ $this->title = 'Новинка — Набор для гитариста';
 
 // Регистрируем JavaScript для обработки формы "Добавить все в корзину"
 $this->registerJs("
+    // Проверяем, доступна ли функция showNotification
+    console.log('showNotification function available:', typeof showNotification === 'function');
+    
+    // Пробуем вызвать её напрямую
+    try {
+        setTimeout(() => {
+            showNotification('Тестовое уведомление при загрузке страницы', 'success');
+        }, 1000);
+    } catch (e) {
+        console.error('Error showing notification:', e);
+    }
+    
     document.getElementById('add-all-to-cart-form').addEventListener('submit', function(e) {
         e.preventDefault();
         
         const formData = new FormData(this);
+        
+        // Показываем уведомление сразу после нажатия кнопки
+        try {
+            console.log('Showing notification before fetch');
+            showNotification('Товары добавляются в корзину...', 'success');
+        } catch (e) {
+            console.error('Error showing notification:', e);
+        }
         
         fetch(this.getAttribute('action'), {
             method: 'POST',
@@ -24,11 +44,22 @@ $this->registerJs("
         })
         .then(response => response.json())
         .then(data => {
-            if (data.success && data.redirect) {
-                // Используем URL редиректа от сервера
-                window.location.href = data.redirect;
+            if (data.success) {
+                console.log('Success response, showing notification');
+                // Показываем уведомление напрямую здесь, как в функции addToCart
+                showNotification('Товар успешно добавлен в корзину', 'success');
+                
+                // Обновляем счетчик корзины
+                if (typeof updateCartCounter === 'function') {
+                    updateCartCounter();
+                }
+                
+                // Задержка перед переходом в корзину
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1500);
             } else {
-                // Если ошибка, показываем уведомление на текущей странице
+                console.log('Error response, showing notification');
                 showNotification(data.message || 'Не удалось добавить товары в корзину', 'error');
             }
         })
@@ -64,10 +95,16 @@ $this->registerJs("
         <?php foreach ($products as $product): ?>
             <div class="col">
                 <div class="card h-100">
-                    <?php if ($product->image): ?>
-                        <img src="<?= Url::to('@web/uploads/' . $product->image) ?>" class="card-img-top" alt="<?= Html::encode($product->name) ?>" style="height: 200px; object-fit: contain; padding: 1rem;">
+                    <?php if ($product->image && file_exists(Yii::getAlias('@webroot/uploads/' . $product->image))): ?>
+                        <img src="<?= Url::to('@web/uploads/' . $product->image) ?>" 
+                             class="card-img-top" 
+                             alt="<?= Html::encode($product->name) ?>" 
+                             style="height: 200px; object-fit: contain; padding: 1rem;">
                     <?php else: ?>
-                        <img src="<?= Url::to('@web/images/no-image.jpg') ?>" class="card-img-top" alt="Изображение отсутствует" style="height: 200px; object-fit: contain; padding: 1rem;">
+                        <img src="<?= Url::to('@web/images/no-image.svg') ?>" 
+                             class="card-img-top" 
+                             alt="Изображение отсутствует" 
+                             style="height: 200px; object-fit: contain; padding: 1rem;">
                     <?php endif; ?>
                     <div class="card-body">
                         <h5 class="card-title"><?= Html::encode($product->name) ?></h5>
