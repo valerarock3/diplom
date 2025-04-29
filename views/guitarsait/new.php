@@ -6,6 +6,38 @@ use yii\helpers\Url;
 /* @var $products app\models\Product[] */
 
 $this->title = 'Новинка — Набор для гитариста';
+
+// Регистрируем JavaScript для обработки формы "Добавить все в корзину"
+$this->registerJs("
+    document.getElementById('add-all-to-cart-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch(this.getAttribute('action'), {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-Token': '" . Yii::$app->request->getCsrfToken() . "',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.redirect) {
+                // Используем URL редиректа от сервера
+                window.location.href = data.redirect;
+            } else {
+                // Если ошибка, показываем уведомление на текущей странице
+                showNotification(data.message || 'Не удалось добавить товары в корзину', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            showNotification('Произошла ошибка при добавлении товаров', 'error');
+        });
+    });
+");
 ?>
 <div class="container mt-4">
     <nav aria-label="breadcrumb" class="mb-4">
@@ -17,7 +49,7 @@ $this->title = 'Новинка — Набор для гитариста';
     <h1 class="mb-4">Набор для гитариста <span class="badge bg-warning text-dark">Новинка</span></h1>
 
     <!-- Кнопка добавить все в корзину -->
-    <form method="post" action="<?= Url::to(['guitarsait/add-all-to-cart']) ?>">
+    <form id="add-all-to-cart-form" method="post" action="<?= Url::to(['guitarsait/add-all-to-cart']) ?>">
         <?php foreach ($products as $product): ?>
             <input type="hidden" name="ids[]" value="<?= $product->id ?>">
         <?php endforeach; ?>
@@ -49,9 +81,10 @@ $this->title = 'Новинка — Набор для гитариста';
                         </p>
                     </div>
                     <div class="card-footer bg-transparent border-top-0">
-                        <?= Html::a('<i class="fas fa-shopping-cart"></i> В корзину', ['guitarsait/add-to-cart', 'id' => $product->id], [
-                            'class' => 'btn btn-success w-100',
-                            'data-method' => 'post'
+                        <?= Html::a('<i class="fas fa-shopping-cart"></i> В корзину', 'javascript:void(0);', [
+                            'class' => 'btn btn-success w-100 cart-add-btn',
+                            'data-id' => $product->id,
+                            'onclick' => "addToCart('" . Url::to(['guitarsait/add-to-cart', 'id' => $product->id]) . "')"
                         ]) ?>
                     </div>
                 </div>

@@ -21,18 +21,27 @@ $this->title = 'Поиск товаров';
     <!-- Заголовок и кнопка возврата -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Результаты поиска по запросу: "<?= Html::encode($query) ?>"</h1>
-        <?= Html::a('← Вернуться в магазин', ['guitarsait/home'], ['class' => 'btn btn-outline-primary']) ?>
+        <?= Html::a('← Вернуться в магазин', ['guitarsait/home'], [
+            'class' => 'btn btn-primary d-flex align-items-center',
+            'style' => 'height: 38px;'
+        ]) ?>
     </div>
 
     <!-- Форма поиска -->
     <div class="search-form mb-4">
-        <form method="get" class="d-flex gap-2">
-            <input type="hidden" name="r" value="guitarsait/search">
-            <?= Html::textInput('query', $query, [
-                'class' => 'form-control',
-                'placeholder' => 'Введите название товара...'
-            ]) ?>
-            <?= Html::submitButton('Поиск', ['class' => 'btn btn-primary']) ?>
+        <form method="get" class="d-flex align-items-center">
+            <div class="input-group">
+                <input type="hidden" name="r" value="guitarsait/search">
+                <?= Html::textInput('query', $query, [
+                    'class' => 'form-control',
+                    'placeholder' => 'Введите название товара...',
+                    'style' => 'height: 38px; border-radius: 4px 0 0 4px;'
+                ]) ?>
+                <?= Html::submitButton('<i class="fas fa-search"></i>', [
+                    'class' => 'btn btn-primary d-flex align-items-center justify-content-center',
+                    'style' => 'height: 38px; width: 38px; border-radius: 0 4px 4px 0; padding: 0;'
+                ]) ?>
+            </div>
         </form>
     </div>
 
@@ -42,7 +51,10 @@ $this->title = 'Поиск товаров';
             <p>По вашему запросу "<?= Html::encode($query) ?>" ничего не найдено.</p>
             <hr>
             <p class="mb-0">Попробуйте изменить поисковый запрос или вернитесь к просмотру всех товаров.</p>
-            <?= Html::a('Вернуться к категориям', ['guitarsait/home'], ['class' => 'btn btn-primary mt-3']) ?>
+            <?= Html::a('Вернуться к категориям', ['guitarsait/home'], [
+                'class' => 'btn btn-primary d-flex align-items-center justify-content-center',
+                'style' => 'height: 38px; width: fit-content; margin-top: 1rem;'
+            ]) ?>
         </div>
     <?php else: ?>
         <!-- Сетка товаров -->
@@ -61,25 +73,28 @@ $this->title = 'Поиск товаров';
                                  alt="Изображение отсутствует"
                                  style="height: 200px; object-fit: contain; padding: 1rem;">
                         <?php endif; ?>
-                        <div class="card-body">
+                        <div class="card-body d-flex flex-column">
                             <h5 class="card-title"><?= Html::encode($product->name) ?></h5>
                             <?php if (isset($product->description) && !empty($product->description)): ?>
-                                <p class="card-text"><?= Html::encode($product->description) ?></p>
+                                <p class="card-text" style="min-height: 48px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                                    <?= Html::encode($product->description) ?>
+                                </p>
+                            <?php else: ?>
+                                <p class="card-text" style="min-height: 48px;"></p>
                             <?php endif; ?>
-                            <p class="card-text">
+                            <p class="card-text mb-4">
                                 <span class="fs-5 fw-bold text-primary">
                                     <?= number_format($product->price, 0, '.', ' ') ?> ₽
                                 </span>
                             </p>
-                        </div>
-                        <div class="card-footer bg-transparent border-top-0">
-                            <div class="d-flex gap-2">
+                            <div class="mt-auto d-grid gap-2">
                                 <?= Html::a('Подробнее', ['guitarsait/view', 'id' => $product->id], [
-                                    'class' => 'btn btn-outline-primary flex-grow-1'
+                                    'class' => 'btn btn-primary'
                                 ]) ?>
-                                <?= Html::a('<i class="fas fa-shopping-cart"></i> В корзину', ['guitarsait/add-to-cart', 'id' => $product->id], [
-                                    'class' => 'btn btn-success flex-grow-1',
-                                    'data-method' => 'post'
+                                <?= Html::a('<i class="fas fa-shopping-cart"></i> В корзину', 'javascript:void(0);', [
+                                    'class' => 'btn btn-success cart-add-btn',
+                                    'data-id' => $product->id,
+                                    'onclick' => "addToCart('" . Url::to(['guitarsait/add-to-cart', 'id' => $product->id]) . "')"
                                 ]) ?>
                             </div>
                         </div>

@@ -150,9 +150,20 @@ class GuitarsaitController extends Controller{
 
     public function actionAddToCart($id)
     {
-        Cart::addToCart($id);
-        Yii::$app->session->setFlash('success', 'Товар добавлен в корзину');
-        return $this->redirect(Yii::$app->request->referrer);
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+        
+        $product = Product::findOne($id);
+        if ($product) {
+            Cart::addToCart($id);
+            return [
+                'success' => true,
+                'message' => 'Товар добавлен в корзину'
+            ];
+        } 
+        return [
+            'success' => false,
+            'message' => 'Товар не найден'
+        ];
     }
 
     public function actionClearCart()
@@ -354,13 +365,37 @@ class GuitarsaitController extends Controller{
 
     public function actionAddAllToCart()
     {
+        $isAjax = Yii::$app->request->isAjax;
+        
         $ids = Yii::$app->request->post('ids', []);
-        if (is_array($ids)) {
+        if (is_array($ids) && !empty($ids)) {
             foreach ($ids as $id) {
                 Cart::addToCart($id);
             }
-            Yii::$app->session->setFlash('success', 'Все товары добавлены в корзину!');
+            
+            if ($isAjax) {
+                Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+                Yii::$app->session->setFlash('success', 'Набор товаров успешно добавлен в корзину!');
+                return [
+                    'success' => true,
+                    'message' => 'Все товары добавлены в корзину!',
+                    'redirect' => \yii\helpers\Url::to(['korzina'])
+                ];
+            } else {
+                Yii::$app->session->setFlash('success', 'Набор товаров успешно добавлен в корзину!');
+                return $this->redirect(['korzina']);
+            }
         }
+        
+        if ($isAjax) {
+            Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+            return [
+                'success' => false,
+                'message' => 'Не выбраны товары'
+            ];
+        }
+        
+        Yii::$app->session->setFlash('error', 'Не выбраны товары');
         return $this->redirect(['korzina']);
     }
 

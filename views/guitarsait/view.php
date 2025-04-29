@@ -7,6 +7,35 @@ use yii\helpers\Url;
 /* @var $model app\models\Product */
 
 $this->title = $model->name;
+
+// Регистрируем CSS для уведомления
+$this->registerCss("
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        background-color: #28a745;
+        color: white;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        transform: translateX(150%);
+        transition: transform 0.3s ease-in-out;
+        z-index: 1000;
+    }
+    .notification.show {
+        transform: translateX(0);
+    }
+    .notification.error {
+        background-color: #dc3545;
+    }
+");
+
+// Регистрируем JavaScript для обработки добавления в корзину
+$this->registerJs("
+    // Эта функция уже определена в main.php, здесь не нужно дублировать
+    // Код для кнопки добавления в корзину уже есть в атрибуте onclick
+");
 ?>
 
 <div class="container mt-4">
@@ -58,12 +87,17 @@ $this->title = $model->name;
 
                     <div class="action-buttons">
                         <?= Html::a('Добавить в корзину', 
-                            ['add-to-cart', 'id' => $model->id], 
-                            ['class' => 'btn btn-success btn-lg mb-2 w-100']
+                            'javascript:void(0);', 
+                            [
+                                'class' => 'btn btn-success btn-lg mb-2 w-100',
+                                'id' => 'add-to-cart-btn',
+                                'onclick' => "addToCart('" . Url::to(['add-to-cart', 'id' => $model->id]) . "')",
+                                'data-id' => $model->id
+                            ]
                         ) ?>
                         <?= Html::a('Вернуться к категории', 
                             ['category', 'category' => $model->category], 
-                            ['class' => 'btn btn-outline-secondary w-100']
+                            ['class' => 'btn btn-secondary w-100']
                         ) ?>
                     </div>
                 </div>

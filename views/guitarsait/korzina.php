@@ -7,6 +7,34 @@ use yii\helpers\Url;
 /* @var $total float */
 
 $this->title = 'Корзина';
+
+// Добавляем JavaScript для проверки флага уведомления
+$this->registerJs("
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Checking for notification flag');
+        
+        // Проверяем как sessionStorage, так и параметр URL
+        var showNotificationFlag = sessionStorage.getItem('showCartNotification');
+        var urlParams = new URLSearchParams(window.location.search);
+        var showNotificationParam = urlParams.get('showNotification');
+        
+        console.log('Flag in sessionStorage:', showNotificationFlag);
+        console.log('Flag in URL:', showNotificationParam);
+        
+        // Показываем уведомление, если установлен любой из флагов
+        if (showNotificationFlag === 'true' || showNotificationParam === 'true') {
+            console.log('Showing notification');
+            
+            // Удаляем флаг из sessionStorage
+            sessionStorage.removeItem('showCartNotification');
+            
+            // Небольшая задержка для гарантии полной загрузки DOM
+            setTimeout(function() {
+                showNotification('Набор товаров успешно добавлен в корзину!', 'success');
+            }, 300);
+        }
+    });
+");
 ?>
 
 <div class="container mt-4">
@@ -70,7 +98,7 @@ $this->title = 'Корзина';
                             'class' => 'btn btn-success btn-lg w-100 mb-2',
                         ]) ?>
                         <?= Html::a('Очистить корзину', ['clear-cart'], [
-                            'class' => 'btn btn-outline-danger w-100',
+                            'class' => 'btn btn-danger w-100',
                             'data' => [
                                 'method' => 'post',
                                 'confirm' => 'Вы уверены, что хотите очистить корзину?'

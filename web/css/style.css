@@ -8,8 +8,7 @@
 body {
     font-family: 'Roboto', Arial, sans-serif;
     background-color: #f4f4f9;
-    color: #333;
-    line-height: 1.6;
+    min-height: 100vh;
 }
 
 /* Контейнер */
@@ -333,4 +332,101 @@ body {
 
 .btn-home:hover {
     background: #0056b3;
+}
+
+/* Основной контейнер */
+.sait {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+/* Стили для хедера */
+.top-header {
+    background-color: #f8f9fa;
+    padding: 6px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.search-block {
+    flex: 0 1 350px;
+}
+
+.search-form {
+    display: flex;
+    gap: 6px;
+}
+
+.search-input {
+    flex: 1;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.search-button {
+    height: 28px;
+    padding: 0 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.btn {
+    height: 28px;
+    padding: 0 10px;
+    border: none;
+    border-radius: 3px;
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.btn-success {
+    background-color: #28a745;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-primary {
+    background-color: #007bff;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+/* Основной контент */
+.main-content {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 0 15px;
 }

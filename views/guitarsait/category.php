@@ -29,7 +29,7 @@ $this->title = isset($categoryTitles[$categoryName]) ? $categoryTitles[$category
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><?= Html::encode($this->title) ?></h1>
-        <?= Html::a('← Вернуться в магазин', ['guitarsait/home'], ['class' => 'btn btn-outline-primary']) ?>
+        <?= Html::a('← Вернуться в магазин', ['guitarsait/home'], ['class' => 'btn btn-primary']) ?>
     </div>
 
     <!-- Добавляем блок фильтрации -->
@@ -69,25 +69,28 @@ $this->title = isset($categoryTitles[$categoryName]) ? $categoryTitles[$category
                                  alt="Изображение отсутствует"
                                  style="height: 200px; object-fit: contain; padding: 1rem;">
                         <?php endif; ?>
-                        <div class="card-body">
-                            <h5 class="card-title"><?= Html::encode($product->name) ?></h5>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title" style="min-height: 48px;"><?= Html::encode($product->name) ?></h5>
                             <?php if (isset($product->description) && !empty($product->description)): ?>
-                                <p class="card-text"><?= Html::encode($product->description) ?></p>
+                                <p class="card-text" style="min-height: 48px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                                    <?= Html::encode($product->description) ?>
+                                </p>
+                            <?php else: ?>
+                                <p class="card-text" style="min-height: 48px;"></p>
                             <?php endif; ?>
-                            <p class="card-text">
+                            <p class="card-text mb-4">
                                 <span class="fs-5 fw-bold text-primary">
                                     <?= number_format($product->price, 0, '.', ' ') ?> ₽
                                 </span>
                             </p>
-                        </div>
-                        <div class="card-footer bg-transparent border-top-0">
-                            <div class="d-flex gap-2">
+                            <div class="mt-auto d-grid gap-2">
                                 <?= Html::a('Подробнее', ['guitarsait/view', 'id' => $product->id], [
-                                    'class' => 'btn btn-outline-primary flex-grow-1'
+                                    'class' => 'btn btn-primary'
                                 ]) ?>
-                                <?= Html::a('<i class="fas fa-shopping-cart"></i> В корзину', ['guitarsait/add-to-cart', 'id' => $product->id], [
-                                    'class' => 'btn btn-success flex-grow-1',
-                                    'data-method' => 'post'
+                                <?= Html::a('<i class="fas fa-shopping-cart"></i> В корзину', 'javascript:void(0);', [
+                                    'class' => 'btn btn-success cart-add-btn',
+                                    'data-id' => $product->id,
+                                    'onclick' => "addToCart('" . Url::to(['guitarsait/add-to-cart', 'id' => $product->id]) . "')"
                                 ]) ?>
                             </div>
                         </div>
